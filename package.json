@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ShengjenChiu/tinyapp/issues"
   },
-  "homepage": "https://github.com/ShengjenChiu/tinyapp#readme"
+  "homepage": "https://github.com/ShengjenChiu/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
