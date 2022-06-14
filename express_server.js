@@ -6,7 +6,8 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "9sm5xK": "http://www.google.com",
+  "S152tx": "https://www.tsn.ca"
 };
 
 //registers a handler on the root path, "/"
@@ -30,7 +31,11 @@ app.get("/urls", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
+  const longURL = urlDatabase[req.params.shortURL];
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: longURL
+  };
   res.render("urls_show", templateVars);
 });
 
