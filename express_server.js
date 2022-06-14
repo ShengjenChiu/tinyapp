@@ -11,16 +11,32 @@ const urlDatabase = {
 };
 
 //registers a handler on the root path, "/"
-app.get("/", (req, res) => {
-  res.send("Hello!");
+// app.get("/", (req, res) => {
+//   res.send("Hello!");
+// });
+
+// app.get("/hello", (req, res) => {
+//   //res.send("<html><body>Hello <b>World</b></body></html>\n");
+
+//   const templateVars = { greeting: 'Hello World!'};
+
+//   res.render('hello_world', templateVars);
+// });
+
+function generateRandomString() {
+
+}
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.post("/urls", (req, res) => {
+  console.log(req.body);  // Log the POST request body to the console
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
-app.get("/hello", (req, res) => {
-  //res.send("<html><body>Hello <b>World</b></body></html>\n");
-
-  const templateVars = { greeting: 'Hello World!'};
-
-  res.render('hello_world', templateVars);
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
 });
 
 app.get("/urls", (req, res) => {
