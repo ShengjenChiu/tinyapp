@@ -41,6 +41,16 @@ app.get("/urls/new", (req, res) => {
 });
 
 
+app.get("/urls_show/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: longURL
+  };
+  res.render("urls_show", templateVars);
+});
+
+
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   const templateVars = { 
@@ -60,9 +70,7 @@ app.post("/urls", (req, res) => {
 });
 
 
-
 app.post("/urls/:id", (req, res) => {
-  console.log(req.id);  // Log the POST request body to the console
   res.redirect("/urls");
 });
 
