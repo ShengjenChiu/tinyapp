@@ -7,14 +7,14 @@ const { render } = require("express/lib/response");
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended: true}));  //same as req.body.longURL???
+app.use(bodyParser.urlencoded({extended: true}));
 
+//mock database
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
   "S152tx": "https://www.tsn.ca"
 };
-
 
 
 //generate random short URL
@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-
+//index page
 app.get("/urls", (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
@@ -39,12 +39,14 @@ app.get("/urls", (req, res) => {
   //res.json(urlDatabase);
 });
 
+//show long url
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
 
+//enter new url page.
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
     username: req.cookies["username"]
@@ -53,6 +55,8 @@ app.get("/urls/new", (req, res) => {
 });
 
 
+
+//show page
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   const templateVars = { 
@@ -63,6 +67,22 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+//registration form
+app.get("/register", (req, res) => {
+  res.render("urls_registration");
+});
+
+
+// //registration page
+// app.post("/register", (req, res) => {
+//   const templateVars = { 
+//     username: req.cookies["username"]
+//   };
+//   res.redirect("urls_registration", templateVars);
+// });
+
+
+//user login element
 app.post("/login", (req, res) => {
   const username = req.body.username;
   res.cookie('username', username);
@@ -70,7 +90,7 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-
+//build short url and long url database
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
@@ -80,11 +100,15 @@ app.post("/urls", (req, res) => {
 });
 
 
+
+
+
+//redrect back to index page
 app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-
+//delete existing url.
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortU = req.params.shortURL;
 
@@ -93,13 +117,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-
+//user logout
 app.get("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
 });
 
-
+//server activation
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
