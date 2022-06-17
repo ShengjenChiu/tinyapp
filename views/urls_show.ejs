@@ -22,9 +22,9 @@
     <div class="card-footer text-muted"></div>
   </div>
 
-  <form method="POST" action="/urls/:id">
+  <form method="POST" action="/urls/<%= shortURL %>">
     <label for="url"> New URL: </label>
-    <input type="url" name="new URL" id="url">
+    <input type="url" name="longURL" id="url">
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 
