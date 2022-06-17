@@ -1,11 +1,19 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 const { render } = require("express/lib/response");
+// const bcrypt = require('bcryptjs');
+// const password = "purple-monkey-dinosaur"; // found in the req.params object
+// const hashedPassword = bcrypt.hashSync(password, 10);
+// const helper = require("helpers");
+// const 
 
 app.set("view engine", "ejs");
+
+//Middlewares
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -14,6 +22,33 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
   "S152tx": "https://www.tsn.ca"
+
+  // "b2xVn2": {
+  //   longURL: "http://www.lighthouselabs.ca",
+  //   userID: "b2xVn2"
+  // },
+  
+  // "9sm5xK": {
+  //   longURL: "http://www.google.com",
+  //   userID: "9sm5xK"
+  // },
+  
+
+  // "S152tx": {
+  //   longURL: "https://www.tsn.ca",
+  //   userID: "S152tx"
+  // },
+
+  // b6UTxQ: {
+  //   longURL: "https://www.tsn.ca",
+  //   userID: "b6UTxQ"
+  // },
+
+  // i3BoGr: {
+  //   longURL: "https://www.google.ca",
+  //   userID: "i3BoGr"
+  // }
+
 };
 
 
@@ -22,12 +57,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "123" //"purple-monkey-dinosaur"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: "456" //"dishwasher-funk"
   }
 }
 
@@ -37,6 +72,15 @@ function generateRandomString() {
   return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
 }
 
+
+function getUserByEmail(email) {
+  for (const userId in users) {
+    if (email === users[userId].email) {
+      return users[userId];
+    }
+  }
+  return null;
+}
 
 //registers a handler on the root path, "/"
 app.get("/", (req, res) => {
@@ -55,8 +99,6 @@ app.get("/urls", (req, res) => {
   };
 
   res.render("urls_index", templateVars);
-
-  //res.json(urlDatabase);
 });
 
 
@@ -108,38 +150,50 @@ app.post("/register", (req, res) => {
   const newEmail = req.body.email;
   const newPassword = req.body.password;
   const user_id = generateRandomString();
-  let user = users[user_id];
   
-  user = {
+  if (newEmail === '' || newPassword === '') {
+    res.status(400).send('400. Please enter email/password.');
+  }
+
+  if(getUserByEmail(newEmail)) {
+    res.status(400).send('400. Your email has already exist.');
+  }
+
+  let user = {
     id: user_id,
     email: newEmail,
     password: newPassword
   };
-
-  const templateVars = user;
-
+  users[user_id] = user;
+  
+  //const templateVars = { user };
+  
   res.cookie("user_id", user_id);
-
-console.log(`user: ${user}; user_id: ${user_id}`);
-
-  res.redirect("urls", templateVars);
+  
+  //res.redirect("urls_registration", templateVars);
+  res.redirect("/urls");
 });
 
 
-//user login element
+//user login page
 app.post("/login", (req, res) => {
   // const userId = req.cookies["user_id"]
   // const user = users[userId];
   // const email = user.email;
-  const userEmail = req.params.email;
-  const password = req.params.password;
+  const password = req.body.password;
+  const userEmail = req.body.email;
+  const user1 = getUserByEmail(userEmail);
 
-  const templateVars = { 
-    email: userEmail,
-    password: password
-  };
-
-  res.redirect("/urls", templateVars);
+  if (!user1) {
+    res.status(403).send("403. We cannot find the user.");
+  }
+  
+  if (!(password === user1.password)) {
+    res.status(403).send("403. Password does not exist.");      
+  } else {
+    res.cookie("user_id", user1.id);
+    res.redirect("/urls");
+  }
 });
 
 
@@ -171,7 +225,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //user logout
 app.get("/logout", (req, res) => {
-  //res.clearCookie("username");
   res.clearCookie("user_id");
   res.redirect("/urls");
 });
@@ -196,3 +249,14 @@ app.listen(PORT, () => {
 //   });
 // }; 
 
+// const urlsForUser = function (id) {
+//   let _url = '';
+
+//   if (id === id of currently logged in user)
+
+//   return _url;
+// };
+
+
+// bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword); // returns true
+// bcrypt.compareSync("pink-donkey-minotaur", hashedPassword); // returns false
