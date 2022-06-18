@@ -19,30 +19,26 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 //mock database of URLs
 const urlDatabase = {
-  "b2xVn2": {
+  k5xTu9: {
     longURL: "http://www.lighthouselabs.ca",
     userID: "b2xVn2"
   },
   
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "9sm5xK"
-  },
-  
 
-  "S152tx": {
+  S152tx: {
     longURL: "https://www.tsn.ca",
-    userID: "S152tx"
+    userID: "b2xVn2"
   },
 
-  "b6UTxQ": {
+
+  b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "b6UTxQ"
+    userID: "aJ48lW"
   },
 
-  "i3BoGr": {
+  i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "i3BoGr"
+    userID: "aJ48lW"
   }
 };
 
@@ -52,12 +48,19 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "123" //"purple-monkey-dinosaur"
+    password: "123"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
+
+ "b2xVn2": {
+    id: "b2xVn2", 
     email: "user2@example.com", 
-    password: "456" //"dishwasher-funk"
+    password: "456"
+  },
+
+  "aJ48lW": {
+    id: "aJ48lW", 
+    email: "shc732@example.com", 
+    password: "789"
   }
 }
 
@@ -77,6 +80,20 @@ function getUserByEmail(email) {
   return null;
 }
 
+
+function urlsForUser(id) {
+  let _url = '';
+  let keysArr = Object.keys(urlDatabase);
+
+  for (const k of keysArr) {
+    if (id === urlDatabase[k].userID) {
+      _url = urlDatabase[k].longURL;
+    }
+  }
+
+  return _url;
+};
+
 //registers a handler on the root path, "/"
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -86,34 +103,32 @@ app.get("/", (req, res) => {
 //index page
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"]
- 
+  let _url = urlsForUser(userId);
+  let shortURLArr = [];
+
+  shortURLArr.push(_url);
+
   const templateVars = {
-    //username: req.cookies["username"],
     user: users[userId],
-    urls: urlDatabase
+    urls: urlDatabase,
+    shortURL: shortURLArr
   };
-
+    
   res.render("urls_index", templateVars);
-});
 
-
-//show long url
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
-  res.redirect(longURL);
 });
 
 
 //enter new url page.
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"]
+
   console.log("userId:", userId);
+
   if (!userId) {
     res.redirect("/login");
   } else {
     const templateVars = { 
-      //username: req.cookies["username"]
       user: users[userId]
     };
     res.render("urls_new", templateVars);
@@ -126,12 +141,32 @@ app.get("/urls/:shortURL", (req, res) => {
   const userId = req.cookies["user_id"];
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
-  const templateVars = { 
-    shortURL,
-    longURL,
-    user: users[userId]
-  };
-  res.render("urls_show", templateVars);
+
+  if (!userId) {
+    res.render("urls_login");
+  // } else if (userId !== shortURL) {
+  //   res.send("This is not your URL.");
+  } else {
+    const templateVars = { 
+      shortURL,
+      longURL,
+      user: users[userId]
+    };
+    res.render("urls_show", templateVars);
+  }
+});
+
+
+//show long url with shortURL
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
+
+  if (!shortURL) {
+    res.status.send("Error: the short URL does not exist.");
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 
@@ -166,11 +201,7 @@ app.post("/register", (req, res) => {
   };
   users[user_id] = user;
   
-  //const templateVars = { user };
-  
   res.cookie("user_id", user_id);
-  
-  //res.redirect("urls_registration", templateVars);
   res.redirect("/urls");
 });
 
@@ -201,8 +232,7 @@ app.post("/login", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-
-  const userID = res.cookie("user_id");
+  const userID = req.cookies["user_id"];
 
   if (!userID) {
     res.redirect("/login");      
@@ -217,22 +247,37 @@ app.post("/urls", (req, res) => {
 });
 
 
-//redrect back to index page
+//edit existing url.
 app.post("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL].longURL = longURL;
-  res.redirect("/urls");
+
+  if (!userId) {
+    res.render("urls_login");
+  // } else if (userId !== shortURL) {
+  //   res.send("This is not the URL you created.");
+  } else {
+    urlDatabase[shortURL].longURL = longURL;
+    res.redirect("/urls");
+  }
+
 });
 
 
 //delete existing url.
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const userId = req.cookies["user_id"];
   const shortU = req.params.shortURL;
 
-  //urlDatabase.splice(shortU, 1);
-  delete urlDatabase[shortU];
-  res.redirect("/urls");
+  if (!userId) {
+    res.redirect("/login");
+  } else if (userId !== shortU) {
+    res.send("This is not the URL you created.");
+  } else {
+    delete urlDatabase[shortU];
+    res.redirect("/urls");
+  }
 });
 
 
@@ -261,14 +306,6 @@ app.listen(PORT, () => {
     
 //   });
 // }; 
-
-// const urlsForUser = function (id) {
-//   let _url = '';
-
-//   if (id === id of currently logged in user)
-
-//   return _url;
-// };
 
 
 // bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword); // returns true

@@ -25,25 +25,32 @@
           <th scope="col">Delete</th>
         </tr>
       </thead>
-
-      <tbody>
-        <% for(let url in urls) { %>
-          <tr>
-            <td><%= url %></td>
-            <td><%= urls[url].longURL %></td>
-            <td>
-              <form method="GET" action="/urls/<%=url %>"></form>
-                <a href="urls/<%= url %>"><button type="submit" class="btn btn-primary">Edit</button></a>
+      
+      <% if (user) { %>
+        <tbody>
+          <% for(let url in urls) { %>
+            <tr>
+              <td><%= url %></td>
+              <td><%= urls[url].longURL %></td>
+              <td>
+                <form method="GET" action="/urls/<%=url %>"></form>
+                  <a href="urls/<%= url %>"><button type="submit" class="btn btn-primary">Edit</button></a>
+                </form>
+              </td>
+              </td>
+              <form method="POST" action="/urls/<%=url %>/delete">
+                <td><button type="Delete" class="btn btn-primary">Delete</button></td>
               </form>
-            </td>
-            </td>
-            <form method="POST" action="/urls/<%=url %>/delete">
-              <td><button type="Delete" class="btn btn-primary">Delete</button></td>
-            </form>
+            </tr>
+          <% } %>
+        </tbody>
+      <% } else { %>
+        <tbody>
+          <tr>
+            <P>Welcome to use tiny app. Please login before start seaching for URL.</P>
           </tr>
-        <% } %>
-      </tbody>
-
+        </tbody>
+      <% } %>
     </table>
  
     <!-- a link for shortening a new URL-->
