@@ -1,13 +1,13 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-
+const { render } = require("express/lib/response");
+const morgan = require('morgan');
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-const { render } = require("express/lib/response");
-// const bcrypt = require('bcryptjs');
-// const password = "purple-monkey-dinosaur"; // found in the req.params object
-// const hashedPassword = bcrypt.hashSync(password, 10);
+//const cookieSession = reqire('cookie-session');
+const bcrypt = require('bcryptjs');
+
 // const helper = require("helpers");
 // const 
 
@@ -16,6 +16,7 @@ app.set("view engine", "ejs");
 //Middlewares
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(morgan('dev'));
 
 //mock database of URLs
 const urlDatabase = {
@@ -185,18 +186,22 @@ app.post("/register", (req, res) => {
   const newEmail = req.body.email;
   const newPassword = req.body.password;
   const user_id = generateRandomString();
-  
+  const currentUser = getUserByEmail(newEmail);
+
   if (newEmail === '' || newPassword === '') {
     res.status(400).send('400. Please enter email/password.');
   }
 
-  if(getUserByEmail(newEmail)) {
-    res.status(400).send('400. Your email has already exist.');
+  if(currentUser) {
+    res.status(400).send('400. A user with that email has already exist.');
   }
+
+  const salt = bcrypt.genSaltSync(10)
+  const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
   let user = {
     id: user_id,
-    email: newEmail,
+    email: hashedPassword,
     password: newPassword
   };
   users[user_id] = user;
@@ -219,12 +224,16 @@ app.post("/login", (req, res) => {
     res.status(403).send("403. We cannot find the user.");
   }
   
-  if (!(password === user1.password)) {
-    res.status(403).send("403. Password does not exist.");      
-  } else {
-    res.cookie("user_id", user1.id);
-    res.redirect("/urls");
+  const result = bcrypt.compareSync(password, user1.password); 
+
+  if (!result) {
+    console.log('NOT logged in!');
+    return res.status(403).send("403. Password does not match.");      
   }
+  
+  res.cookie("user_id", user1.id);
+  res.redirect("/urls");
+
 });
 
 
