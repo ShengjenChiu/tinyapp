@@ -98,16 +98,6 @@ const users = {
 }
 
 
-// function getUserByEmail(email, users) {
-//   for (const userId in users) {
-//     if (email === users[userId].email) {
-//       return users[userId];
-//     }
-//   }
-//   return null;
-// }
-
-
 //generate random short URL
 function generateRandomString() {
   return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
@@ -221,8 +211,6 @@ app.post("/register", (req, res) => {
   const newPassword = req.body.password;
   const user_id = generateRandomString();
   const currentUser = getUserByEmail(newEmail, users);
-
-
 
   if (newEmail === '' || newPassword === '') {
     res.status(400).send('400. Please enter email/password.');
