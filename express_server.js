@@ -57,43 +57,45 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
 
   "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", 10)
+
   },
 
   "userRandomID1": {
     id: "userRandomID1", 
     email: "user0@example.com", 
-    password: "765"
+    password: bcrypt.hashSync("123", 10)
   },
 
   "userRandomID2": {
     id: "userRandomID2", 
     email: "user3@example.com", 
-    password: "098"
+    password: bcrypt.hashSync("456", 10)
   },
 
   "userRandomID3": {
     id: "userRandomID3", 
     email: "shc6@example.com", 
-    password: "789"
+    password: bcrypt.hashSync("789", 10)
   },
 
   "userRandomID4": {
     id: "userRandomID4", 
     email: "shc7@example.com", 
-    password: "456"
+    password: bcrypt.hashSync("098", 10)
   },
 
   "userRandomID5": {
     id: "userRandomID5", 
     email: "shc8@example.com", 
-    password: "123"
+    password: bcrypt.hashSync("765", 10)
+
   }
 }
 
