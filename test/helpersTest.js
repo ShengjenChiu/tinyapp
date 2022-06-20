@@ -21,7 +21,15 @@ describe('getUserByEmail', function() {
     const expectedUserID = "userRandomID";
 
     // Write your assert statement here
-    assert.deepEqual(user, expectedUserID);
+    assert.deepEqual(expectedUserID, user);
+
+  });
+  it('should return undefined for a non-existent email', function() {
+    const user = getUserByEmail("user@example.com", testUsers)
+    const expected = "undefined";
+
+    // Write your assert statement here
+    assert.deepEqual(expected, user);
 
   });
 });
