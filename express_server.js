@@ -241,9 +241,6 @@ app.post("/register", (req, res) => {
 
 //user login page
 app.post("/login", (req, res) => {
-  // const userId = req.cookies["user_id"]
-  // const user = users[userId];
-  // const email = user.email;
   const password = req.body.password;
   const userEmail = req.body.email;
   const user1 = getUserByEmail(userEmail, users);
@@ -260,7 +257,6 @@ app.post("/login", (req, res) => {
   }
   
   //res.cookie("user_id", user1.id);
-
   req.session.user_id = user1.id
   res.redirect("/urls");
 
