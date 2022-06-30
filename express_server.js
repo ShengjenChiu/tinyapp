@@ -4,142 +4,55 @@ const PORT = 8087; // default port 8080
 const { render } = require("express/lib/response");
 const morgan = require('morgan');
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const { getUserByEmail } = require('./helpers');
+const { getUserByEmail,
+        generateRandomString,
+        urlDatabase,
+        users,
+        urlsForUser
+      } = require('./helpers');
 
-//console.log(getUserByEmail);
-
+//view engine
 app.set("view engine", "ejs");
 
 //Middlewares
-app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(cookieSession({
   name: 'session',
   keys: ['oh', 'Lord', 'Christ', 'Jesus'],
+}));
 
-  // Cookie Options
-  //maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
-
-
-//mock database of URLs
-const urlDatabase = {
-  k5xTu9: {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "b2xVn2"
-  },
-  
-
-  S152tx: {
-    longURL: "https://www.tsn.ca",
-    userID: "b2xVn2"
-  },
-
-
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW"
-  },
-
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW"
-  }
-};
-
-
-//mock database of users
-const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
-  },
-
-  "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: bcrypt.hashSync("dishwasher-funk", 10)
-
-  },
-
-  "userRandomID1": {
-    id: "userRandomID1", 
-    email: "user0@example.com", 
-    password: bcrypt.hashSync("123", 10)
-  },
-
-  "userRandomID2": {
-    id: "userRandomID2", 
-    email: "user3@example.com", 
-    password: bcrypt.hashSync("456", 10)
-  },
-
-  "userRandomID3": {
-    id: "userRandomID3", 
-    email: "shc6@example.com", 
-    password: bcrypt.hashSync("789", 10)
-  },
-
-  "userRandomID4": {
-    id: "userRandomID4", 
-    email: "shc7@example.com", 
-    password: bcrypt.hashSync("098", 10)
-  },
-
-  "userRandomID5": {
-    id: "userRandomID5", 
-    email: "shc8@example.com", 
-    password: bcrypt.hashSync("765", 10)
-
-  }
-}
-
-
-//generate random short URL
-function generateRandomString() {
-  return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
-}
-
-
-function urlsForUser(id) {
-  let _url = '';
-  let keysArr = Object.keys(urlDatabase);
-
-  for (const k of keysArr) {
-    if (id === urlDatabase[k].userID) {
-      _url = urlDatabase[k].longURL;
-    }
-  }
-
-  return _url;
-};
 
 //registers a handler on the root path, "/"
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect('/urls');
 });
 
 
 //index page
 app.get("/urls", (req, res) => {
-  //const userId = req.cookies["user_id"]
   const userId = req.session.user_id;
   let _url = urlsForUser(userId);
   let shortURLArr = [];
 
   shortURLArr.push(_url);
+  const userUrls = {}
+
+  for (const url in urlDatabase) {
+    const urldetails = urlDatabase[url]
+    if (urldetails["userID"] === userId) {
+      userUrls[url] = urldetails;
+    }
+  }
 
   const templateVars = {
     user: users[userId],
-    urls: urlDatabase,
+    urls: userUrls,
     shortURL: shortURLArr
   };
-    
+   
   res.render("urls_index", templateVars);
 
 });
@@ -147,7 +60,6 @@ app.get("/urls", (req, res) => {
 
 //enter new url page.
 app.get("/urls/new", (req, res) => {
-  //const userId = req.cookies["user_id"]
   const userId = req.session.user_id;
   console.log("userId:", userId);
 
@@ -164,15 +76,17 @@ app.get("/urls/new", (req, res) => {
 
 //show page
 app.get("/urls/:shortURL", (req, res) => {
-  //const userId = req.cookies["user_id"];
   const userId = req.session.user_id;
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
+  const longURL = urlDatabase[shortURL]?.longURL;
+
+  if (!longURL) {
+    return res.send('invalid url');
+  }
+
 
   if (!userId) {
     res.render("urls_login");
-  // } else if (userId !== shortURL) {
-  //   res.send("This is not your URL.");
   } else {
     const templateVars = { 
       shortURL,
@@ -224,9 +138,6 @@ app.post("/register", (req, res) => {
 
   const salt = bcrypt.genSaltSync(10)
   const hashedPassword = bcrypt.hashSync(newPassword, salt);
-  
-  console.log(`currentUser: ${currentUser}`);
-  console.log(`hashedPassword: ${hashedPassword}`);
 
   let user = {
     id: user_id,
@@ -235,7 +146,6 @@ app.post("/register", (req, res) => {
   };
   users[user_id] = user;
   
-  //res.cookie("user_id", user_id);
   req.session.user_id = user_id;
   res.redirect("/urls");
 });
@@ -258,7 +168,6 @@ app.post("/login", (req, res) => {
     return res.status(403).send("403. Password does not match.");      
   }
   
-  //res.cookie("user_id", user1.id);
   req.session.user_id = user1.id
   res.redirect("/urls");
 
@@ -269,7 +178,6 @@ app.post("/login", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  //const userID = req.cookies["user_id"];
   const userID = req.session.user_id;
 
   if (!userID) {
@@ -287,7 +195,6 @@ app.post("/urls", (req, res) => {
 
 //edit existing url.
 app.post("/urls/:id", (req, res) => {
-  //const userId = req.cookies["user_id"];
   const userId = req.session.user_id
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
@@ -306,7 +213,6 @@ app.post("/urls/:id", (req, res) => {
 
 //delete existing url.
 app.post("/urls/:shortURL/delete", (req, res) => {
-  //const userId = req.cookies["user_id"];
   const userId = req.session.user_id
   const shortU = req.params.shortURL;
 
@@ -323,7 +229,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //user logout
 app.get("/logout", (req, res) => {
-  //res.clearCookie("user_id");
   req.session = null;
   res.redirect("/urls");
 });
