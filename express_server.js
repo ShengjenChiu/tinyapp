@@ -84,7 +84,6 @@ app.get("/urls/:shortURL", (req, res) => {
     return res.send('invalid url');
   }
 
-
   if (!userId) {
     res.render("urls_login");
   } else {
@@ -101,7 +100,11 @@ app.get("/urls/:shortURL", (req, res) => {
 //show long url with shortURL
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
+  const longURL = urlDatabase[shortURL]?.longURL;
+
+  if (!longURL) {
+    return res.send('invalid url');
+  }
 
   if (!shortURL) {
     res.status.send("Error: the short URL does not exist.");
@@ -201,8 +204,6 @@ app.post("/urls/:id", (req, res) => {
 
   if (!userId) {
     res.render("urls_login");
-  // } else if (userId !== shortURL) {
-  //   res.send("This is not the URL you created.");
   } else {
     urlDatabase[shortURL].longURL = longURL;
     res.redirect("/urls");
@@ -218,8 +219,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
   if (!userId) {
     res.redirect("/login");
-  // } else if (userId !== shortU) {
-  //   res.send("This is not the URL you created.");
   } else {
     delete urlDatabase[shortU];
     res.redirect("/urls");
